@@ -46,8 +46,8 @@ I haven't included the data in this repo because Kaggle's competition rules don'
 
 | Week | Work | Notebook |
 |---|---|---|
-| 3 | Exploratory analysis and technical challenges | [`fraud-eda.ipynb`](fraud-eda.ipynb) |
-| 3 | Logistic regression and LightGBM baselines with time-based validation | [`fraud-baseline-models.ipynb`](fraud-baseline-models.ipynb) |
+| 3 | Exploratory analysis and technical challenges | [`bm-fraud-detection-exploratory.ipynb`](bm-fraud-detection-exploratory.ipynb) |
+| 3 | Logistic regression and LightGBM baselines with time-based validation | [`bm-fraud-baseline-models.ipynb`](bm-fraud-baseline-models.ipynb) |
 | 4 | Feature engineering and review-budget metrics | *in progress* |
 
 ## Results
@@ -69,8 +69,8 @@ I run the notebooks on Kaggle because it attaches the dataset directly and gives
 
 ## Repository contents
 
-- `fraud-eda.ipynb` loads and merges the data, then looks at class balance, train vs. test over time, transaction amounts, categories, identity coverage, missing values and V-column redundancy. It ends with a table of the technical challenges I found.
-- `fraud-baseline-models.ipynb` encodes the text columns, sets up the time-based validation split, trains both baselines, shows feature importance and writes an optional Kaggle submission file.
+- `bm-fraud-detection-exploratory.ipynb` loads and merges the data, then looks at class balance, train vs. test over time, transaction amounts, categories, identity coverage, missing values and V-column redundancy. It ends with a table of the technical challenges I found.
+- `bm-fraud-baseline-models.ipynb` encodes the text columns, sets up the time-based validation split, trains both baselines, shows feature importance and writes an optional Kaggle submission file.
 
 ## AI assistance
 
