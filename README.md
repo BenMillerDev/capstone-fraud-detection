@@ -1,4 +1,3 @@
-# capstone-fraud-detection
 # Card Fraud Detection Under a Review Budget
 
 DSCI 598 Capstone · Maryville University · Ben Miller
@@ -7,10 +6,21 @@ For my capstone I'm building a fraud detection model using real e-commerce trans
 
 **Quick summary**
 - **Data:** 590,540 labeled card transactions. Only about 3.5% of them are fraud, and most of the 430+ columns are anonymized.
-- **Approach:** gradient boosted trees (LightGBM), validated on the most recent transactions, since a fraud model will always be scoring future data.
+- **Approach:** logistic regression, decision trees, random forests and gradient boosted trees (LightGBM), tuned with cross-validation on time-ordered folds, since a fraud model will always be scoring future data.
 - **Evaluation:** ROC AUC, plus how much fraud gets caught when only the highest-scoring transactions are reviewed.
 - **Explanation:** SHAP values to show which features led to each flag. As a stretch goal, I'd like to add an LLM that turns those results into a plain-English explanation for an analyst.
-- **Status:** the data exploration and baseline models are done (Week 3), and feature engineering is next.
+- **Status:** Week 4's tuned LightGBM on numerical features scored 0.8936 on Kaggle's hidden test set, within 0.003 of its validation score. Categorical features are next.
+
+## How to review this repo
+
+Each week of the project has its own folder. Start with that week's README, which says what the week's goals were, which notebooks to read and in what order, and what the results were. The notebooks are saved with their outputs, so nothing needs to be rerun to see the results.
+
+| Week | Focus | Start here |
+|---|---|---|
+| 3 | Exploring the data, technical challenges and baseline models | [`week-3/README.md`](week-3/README.md) |
+| 4 | Tuning four model types on numerical features and the first Kaggle submission | [`week-4/README.md`](week-4/README.md) |
+
+The Results table below summarizes every week in one place.
 
 ## The problem
 
@@ -38,26 +48,40 @@ I haven't included the data in this repo because Kaggle's competition rules don'
 
 1. **Explore the data** and identify the technical challenges, like the size of the data, how rare fraud is, the time gap between train and test, partial identity data, missing values and redundant anonymized columns.
 2. **Build baseline models.** I started with logistic regression as a simple floor and LightGBM on every column. Both are validated on the most recent 20% of training transactions.
-3. **Engineer features.** I plan to drop redundant V columns, add frequency encoding for columns with a lot of unique values, and group transactions by card and address to approximate a customer.
-4. **Evaluate each change** against the baseline using AUC and fraud caught at a review budget.
-5. **Explain the flagged transactions** with SHAP values, then add the LLM explanation layer if time allows.
+3. **Tune models on numerical features only.** I drop redundant V columns, then tune logistic regression, a decision tree, a random forest and LightGBM with cross-validation on time-ordered folds, and submit the best one.
+4. **Add categorical features.** I'll use statistical tests to find which levels of each categorical column are most predictive, keep only those, and repeat the same four-model tuning.
+5. **Engineer customer-level features** by grouping transactions by card and address to approximate a customer, and add frequency encoding for columns with a lot of unique values.
+6. **Evaluate each change** against the earlier models using AUC and fraud caught at a review budget.
+7. **Explain the flagged transactions** with SHAP values, then add the LLM explanation layer if time allows.
+
+## Decisions
+
+- **Category codes stored as numbers count as categorical.** Columns like `card1`–`card6`, `addr1`, `addr2` and `id_12`–`id_38` contain numbers, but the numbers are codes for a card, a billing region or a browser, not measurements. I'm holding them back from the numerical-only models and adding them in the categorical step.
+- **Tuning uses the full training set.** Every setting is scored on all 590,540 training transactions instead of a sample. It's slower (the Week 4 tuning notebook took about 80 minutes on Kaggle), but for an 8-week project I'd rather be thorough. The only sample is the 100,000 rows used to measure V-column correlations, which is a feature selection step.
 
 ## Progress
 
 | Week | Work | Notebook |
 |---|---|---|
-| 3 | Exploratory analysis and technical challenges | [`bm-fraud-detection-exploratory.ipynb`](bm-fraud-detection-exploratory.ipynb) |
-| 3 | Logistic regression and LightGBM baselines with time-based validation | [`bm-fraud-baseline-models.ipynb`](bm-fraud-baseline-models.ipynb) |
-| 4 | Feature engineering and review-budget metrics | *in progress* |
+| 3 | Exploratory analysis and technical challenges | [`bm-fraud-detection-exploratory.ipynb`](week-3/bm-fraud-detection-exploratory.ipynb) |
+| 3 | Logistic regression and LightGBM baselines with time-based validation | [`bm-fraud-baseline-models.ipynb`](week-3/bm-fraud-baseline-models.ipynb) |
+| 4 | Logistic regression, decision tree, random forest and LightGBM tuned on numerical features with time-ordered cross-validation | [`bm-fraud-numeric-tuning.ipynb`](week-4/bm-fraud-numeric-tuning.ipynb) |
+| 4 | Submission from the best numerical-feature model | [`bm-fraud-numeric-submission.ipynb`](week-4/bm-fraud-numeric-submission.ipynb) |
 
 ## Results
 
-I'll add results here as each experiment runs.
+I'll add results here as each experiment runs. Week 3 used a single split on the most recent 20% of training data. Week 4's last fold uses that same split, so the "last-20% AUC" column compares directly across weeks.
 
-| Model | Validation AUC | Fraud caught reviewing top 1% |
-|---|---|---|
-| Logistic regression (17 columns) | | |
-| LightGBM (all columns) | | |
+| Week | Model | Features | Last-20% AUC | Fraud caught reviewing top 1% | Kaggle private / public |
+|---|---|---|---|---|---|
+| 3 | Logistic regression | 17 numerical columns | 0.7787 | not measured | not submitted |
+| 3 | LightGBM | All 432 columns | 0.9227 | not measured | not submitted |
+| 4 | Logistic regression, tuned | 272 numerical columns | 0.8216 | 15.9% | not submitted |
+| 4 | Decision tree, tuned | 272 numerical columns | 0.8377 | 18.5% | not submitted |
+| 4 | Random forest, tuned | 272 numerical columns | 0.8664 | 23.4% | not submitted |
+| 4 | LightGBM, tuned | 272 numerical columns | 0.8960 | 24.4% | 0.8936 / 0.9115 |
+
+The fraud-caught column for Week 4 is the average across the four time-ordered folds. Since fraud is 3.4–4.0% of each fold, reviewing the top 1% of transactions can catch at most about 25–29% of the fraud. Week 4's tuned LightGBM is close to that ceiling, and about nine of every ten transactions it puts in the top 1% are fraud. Holding back the categorical-style columns cost about 0.027 AUC compared with Week 3, which the categorical step should help recover.
 
 ## Running the notebooks
 
@@ -65,12 +89,33 @@ I run the notebooks on Kaggle because it attaches the dataset directly and gives
 
 1. On Kaggle, create a new notebook and choose **File → Import Notebook**.
 2. Click **Add Input** and add the *IEEE-CIS Fraud Detection* competition. You'll need to accept its rules first.
-3. Run all cells. The code reads the data from `/kaggle/input/ieee-fraud-detection`.
+3. Run all cells. The code reads the data from `/kaggle/input/competitions/ieee-fraud-detection`. For the Week 4 tuning notebook, use **Save & Run All** instead, since it runs for about 80 minutes.
 
 ## Repository contents
 
-- `bm-fraud-detection-exploratory.ipynb` loads and merges the data, then looks at class balance, train vs. test over time, transaction amounts, categories, identity coverage, missing values and V-column redundancy. It ends with a table of the technical challenges I found.
-- `bm-fraud-baseline-models.ipynb` encodes the text columns, sets up the time-based validation split, trains both baselines, shows feature importance and writes an optional Kaggle submission file.
+```
+capstone-fraud-detection/
+├── README.md                               project overview and results across all weeks
+├── week-3/
+│   ├── README.md                           Week 3 goals, findings and results
+│   ├── bm-fraud-detection-exploratory.ipynb
+│   └── bm-fraud-baseline-models.ipynb
+└── week-4/
+    ├── README.md                           Week 4 goals, decisions and results
+    ├── bm-fraud-numeric-tuning.ipynb
+    ├── bm-fraud-numeric-submission.ipynb
+    └── tuning-results/                     every setting each model tried, with its scores
+        ├── tuning_logistic_regression.csv
+        ├── tuning_decision_tree.csv
+        ├── tuning_random_forest.csv
+        └── tuning_lightgbm.csv
+```
+
+- `week-3/bm-fraud-detection-exploratory.ipynb` loads and merges the data, then looks at class balance, train vs. test over time, transaction amounts, categories, identity coverage, missing values and V-column redundancy. It ends with a table of the technical challenges I found.
+- `week-3/bm-fraud-baseline-models.ipynb` encodes the text columns, sets up the time-based validation split, trains both baselines, shows feature importance and writes an optional Kaggle submission file.
+- `week-4/bm-fraud-numeric-tuning.ipynb` builds the numerical feature set, drops redundant V columns, and tunes all four model types on time-ordered folds, scoring each setting by AUC and fraud caught reviewing the top 1%. It ends by printing the best model and settings.
+- `week-4/bm-fraud-numeric-submission.ipynb` trains that best model on all of the training data and writes the Kaggle submission file.
+- `week-4/tuning-results/` holds one CSV per model type with every setting tried and its scores. These back up the Week 4 numbers in the Results table.
 
 ## AI assistance
 

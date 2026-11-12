@@ -10,7 +10,27 @@
 
 1. **[`bm-fraud-numeric-tuning.ipynb`](bm-fraud-numeric-tuning.ipynb)** builds the numerical feature set, drops redundant V columns, and tunes all four model types with cross-validation on time-ordered folds. It ends with a comparison of the best setting for each model type and a summary of what tuning showed.
 2. **[`bm-fraud-numeric-submission.ipynb`](bm-fraud-numeric-submission.ipynb)** trains the best model from tuning on all of the training data and writes the Kaggle submission. The last cell has the Kaggle score.
-3. **[`tuning-results/`](tuning-results/)** has every setting each model tried and its scores, as CSV files.
+3. **[`tuning-results/`](tuning-results/)** has every setting each model tried, with its scores, so any number in this README can be checked without rerunning the tuning.
+
+## Tuning results files
+
+Each file has one row per setting tried, sorted best first.
+
+| File | Settings tried |
+|---|---|
+| [`tuning_logistic_regression.csv`](tuning-results/tuning_logistic_regression.csv) | 8 |
+| [`tuning_decision_tree.csv`](tuning-results/tuning_decision_tree.csv) | 12 |
+| [`tuning_random_forest.csv`](tuning-results/tuning_random_forest.csv) | 6 |
+| [`tuning_lightgbm.csv`](tuning-results/tuning_lightgbm.csv) | 10 |
+
+The columns are:
+- `params`: the settings tried, as JSON;
+- `mean_auc` and `std_auc`: the average AUC across the four folds and how much it varied between them;
+- `last_fold_auc`: the AUC on the most recent 20% of training data, the same split as Week 3;
+- `fraud_caught_top_1pct`: the share of all fraud caught when reviewing the top 1% of transactions;
+- `review_precision_top_1pct`: the share of those reviewed transactions that are fraud;
+- `minutes`: how long the setting took to score;
+- `mean_trees`: LightGBM only, the average number of trees early stopping chose.
 
 Both notebooks are saved with their outputs, so they don't need to be rerun to see the results.
 
